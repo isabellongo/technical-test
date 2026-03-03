@@ -1,0 +1,56 @@
+# =============================================================================
+# Driva Pipeline - Docker Compose
+# =============================================================================
+# Serviços: postgres, n8n, api, frontend
+# Para teste da Fase 1.4: docker-compose up -d postgres
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL - Data Warehouse
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: driva-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # init.sql roda automaticamente na primeira subida (volume vazio)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # n8n - Orquestração dos workflows
+  # ---------------------------------------------------------------------------
+  n8n:
+    image: n8n/n8n:latest
+    container_name: driva-n8n
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      NODE_ENV: production
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # API e Frontend serão adicionados nas Fases 2 e 4 quando as pastas existirem
+
+volumes:
+  postgres_data:
+  n8n_data:
