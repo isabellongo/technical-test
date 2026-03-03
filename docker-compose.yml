@@ -49,7 +49,27 @@ services:
       postgres:
         condition: service_healthy
 
-  # API e Frontend serão adicionados nas Fases 2 e 4 quando as pastas existirem
+  # ---------------------------------------------------------------------------
+  # API Go - Fonte + Analytics
+  # ---------------------------------------------------------------------------
+  api:
+    build: ./api
+    container_name: driva-api
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      API_PORT: "3000"
+      API_KEY: ${API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend será adicionado na Fase 4
 
 volumes:
   postgres_data:
