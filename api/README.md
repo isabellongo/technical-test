@@ -76,10 +76,12 @@ docker-compose up -d postgres api
 
 ## Testes da Fase 2
 
+> **PowerShell:** Use `Invoke-WebRequest` ou `curl.exe` (não `curl`, que é alias com sintaxe diferente).
+
 ### Health check
 
 ```powershell
-curl http://localhost:3000/health
+(Invoke-WebRequest -Uri "http://localhost:3000/health").Content
 ```
 
 Resposta esperada: `{"status":"ok"}`
@@ -87,15 +89,15 @@ Resposta esperada: `{"status":"ok"}`
 ### Fonte - Enrichments paginados
 
 ```powershell
-curl -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:3000/people/v1/enrichments?page=1&limit=10"
+(Invoke-WebRequest -Uri "http://localhost:3000/people/v1/enrichments?page=1&limit=10" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
-(Em ~5% das requisições pode retornar 429 — simulação para teste de retry no n8n.)
+(Em ~5% das requisições pode retornar 429 — simulação para teste de retry no n8n. Se der 429, tente novamente.)
 
 ### Analytics - Overview (KPIs)
 
 ```powershell
-curl -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:3000/analytics/overview"
+(Invoke-WebRequest -Uri "http://localhost:3000/analytics/overview" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
 Nota: A Gold pode estar vazia até rodar os workflows n8n. Nesse caso, totais serão 0.
@@ -103,12 +105,18 @@ Nota: A Gold pode estar vazia até rodar os workflows n8n. Nesse caso, totais se
 ### Analytics - Enrichments paginados
 
 ```powershell
-curl -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:3000/analytics/enrichments?page=1&limit=10"
+(Invoke-WebRequest -Uri "http://localhost:3000/analytics/enrichments?page=1&limit=10" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
 Com filtros (opcionais):
 ```powershell
-curl -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:3000/analytics/enrichments?page=1&limit=10&status_processamento=CONCLUIDO&categoria_tamanho_job=MEDIO"
+(Invoke-WebRequest -Uri "http://localhost:3000/analytics/enrichments?page=1&limit=10&status_processamento=CONCLUIDO&categoria_tamanho_job=MEDIO" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
+```
+
+### Alternativa com curl.exe (Windows)
+
+```powershell
+curl.exe -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:3000/people/v1/enrichments?page=1&limit=10"
 ```
 
 ---
@@ -116,10 +124,10 @@ curl -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:30
 ## Teste sem chave (esperado: 401)
 
 ```powershell
-curl http://localhost:3000/people/v1/enrichments
+Invoke-WebRequest -Uri "http://localhost:3000/people/v1/enrichments"
 ```
 
-Resposta esperada: `{"error":"missing Authorization header"}`
+Resposta esperada: erro com `{"error":"missing Authorization header"}`
 
 ---
 

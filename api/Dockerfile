@@ -1,10 +1,10 @@
 # =============================================================================
 # API Driva - Dockerfile multi-stage
 # =============================================================================
-# DECISÃO: Build com Go 1.21, stage final Alpine para imagem pequena.
+# DECISÃO: Build com Go 1.23 (alinha com go.mod), stage final Alpine.
 # =============================================================================
 
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
