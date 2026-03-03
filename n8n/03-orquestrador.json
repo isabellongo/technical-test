@@ -1,0 +1,71 @@
+{
+  "name": "Driva - Orquestrador",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "c3d4e5f6-0001-4000-8000-000000000001",
+      "name": "A cada 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Driva - Ingestão API → Bronze"
+        }
+      },
+      "id": "c3d4e5f6-0002-4000-8000-000000000002",
+      "name": "Executar Ingestão",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [460, 200]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Driva - Processamento Bronze → Gold"
+        }
+      },
+      "id": "c3d4e5f6-0003-4000-8000-000000000003",
+      "name": "Executar Processamento",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "A cada 5 min": {
+      "main": [
+        [{ "node": "Executar Ingestão", "type": "main", "index": 0 }]
+      ]
+    },
+    "Executar Ingestão": {
+      "main": [
+        [{ "node": "Executar Processamento", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

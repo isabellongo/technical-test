@@ -1,0 +1,88 @@
+{
+  "name": "Driva - Ingestão API → Bronze",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Paginação completa com retry em 429\n// DECISÃO: Code único para simplicidade; fetch disponível em Node 18+\nconst apiKey = 'driva_test_key_abc123xyz789';\nconst baseUrl = 'http://api:3000/people/v1/enrichments';\nconst limit = 50;\nlet page = 1;\nlet totalPages = 1;\nconst allData = [];\n\nconst now = new Date().toISOString();\n\ndo {\n  let res = await fetch(`${baseUrl}?page=${page}&limit=${limit}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  \n  while (res.status === 429) {\n    await new Promise(r => setTimeout(r, 2000));\n    res = await fetch(`${baseUrl}?page=${page}&limit=${limit}`, {\n      headers: { 'Authorization': `Bearer ${apiKey}` }\n    });\n  }\n  \n  const json = await res.json();\n  totalPages = json.total_pages || 1;\n  \n  for (const item of json.data || []) {\n    allData.push({\n      json: {\n        ...item,\n        dw_ingested_at: now,\n        dw_updated_at: now\n      }\n    });\n  }\n  page++;\n} while (page <= totalPages);\n\nreturn allData.length ? allData : [{ json: { count: 0 } }];"
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Buscar e paginar API",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Filtrar itens válidos",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO dw_bronze_enrichments (id, id_workspace, workspace_name, total_contacts, contact_type, status, created_at, updated_at, dw_ingested_at, dw_updated_at)\nVALUES ('{{ $json.id }}', '{{ $json.id_workspace }}', '{{ $json.workspace_name }}', {{ $json.total_contacts }}, '{{ $json.contact_type }}', '{{ $json.status }}', '{{ $json.created_at }}', '{{ $json.updated_at }}', '{{ $json.dw_ingested_at }}', '{{ $json.dw_updated_at }}')\nON CONFLICT (id) DO UPDATE SET\n  id_workspace = EXCLUDED.id_workspace,\n  workspace_name = EXCLUDED.workspace_name,\n  total_contacts = EXCLUDED.total_contacts,\n  contact_type = EXCLUDED.contact_type,\n  status = EXCLUDED.status,\n  created_at = EXCLUDED.created_at,\n  updated_at = EXCLUDED.updated_at,\n  dw_updated_at = EXCLUDED.dw_updated_at",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Upsert Bronze",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{ "node": "Buscar e paginar API", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buscar e paginar API": {
+      "main": [
+        [{ "node": "Filtrar itens válidos", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filtrar itens válidos": {
+      "main": [
+        [{ "node": "Upsert Bronze", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

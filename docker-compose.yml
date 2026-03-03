@@ -31,8 +31,11 @@ services:
   # ---------------------------------------------------------------------------
   # n8n - Orquestração dos workflows
   # ---------------------------------------------------------------------------
+  # DECISÃO FASE 3: N8N_DATABASE_TYPE=postgres para persistir workflows no DW.
+  # n8n usa o mesmo Postgres do projeto; tabelas n8n ficam em schema separado.
+  # ---------------------------------------------------------------------------
   n8n:
-    image: n8n/n8n:latest
+    image: n8nio/n8n:latest
     container_name: driva-n8n
     ports:
       - "${N8N_PORT:-5678}:5678"
@@ -43,6 +46,13 @@ services:
       N8N_HOST: localhost
       N8N_PORT: 5678
       NODE_ENV: production
+      # Persistir workflows e execuções no Postgres
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: "5432"
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
