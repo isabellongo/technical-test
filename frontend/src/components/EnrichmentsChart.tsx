@@ -8,8 +8,9 @@ type Props = {
 export default function EnrichmentsChart({ data }: Props) {
   const series = Object.entries(data || {}).map(([k, v]) => ({ name: k, value: v }))
 
+  // Ensure parent container yields non-zero size for ResponsiveContainer
   return (
-    <div style={{ width: '100%', height: 300, border: '1px solid #eee', padding: 8, borderRadius: 8 }}>
+    <div style={{ width: '100%', height: 300, minWidth: 0, minHeight: 0, border: '1px solid #eee', padding: 8, borderRadius: 8 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={series} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
           <XAxis dataKey="name" />
