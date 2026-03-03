@@ -38,7 +38,7 @@ docker-compose up -d postgres api n8n
 ## Importar workflows
 
 1. Menu (três pontinhos) → **Import from File**
-2. Selecione os arquivos na pasta `n8n/`, **nessa ordem**:
+2. Selecione os arquivos na pasta `n8n/`, **nessa ordem** (cada arquivo = 1 workflow):
    - `01-ingestao-api-bronze.json`
    - `02-processamento-bronze-gold.json`
    - `03-orquestrador.json`
@@ -54,7 +54,7 @@ docker-compose up -d postgres api n8n
 ### 1. Testar Ingestão manualmente
 
 1. Abra o workflow **Driva - Ingestão API → Bronze**
-2. Clique em **Execute Workflow** (ou no botão ▶ do node Manual Trigger)
+2. O workflow começa com **Manual Trigger** — clique em **Execute Workflow** (ou no ▶ do node Manual Trigger) para rodar
 3. Verifique no Postgres:
    ```sql
    SELECT COUNT(*) FROM dw_bronze_enrichments;
@@ -63,8 +63,8 @@ docker-compose up -d postgres api n8n
 
 ### 2. Testar Processamento manualmente
 
-1. Abra **Driva - Processamento Bronze → Gold**
-2. **Execute Workflow**
+1. Abra **Driva - Processamento Bronze → Gold** (também inicia com **Manual Trigger**)
+2. Clique em **Execute Workflow**
 3. Verifique:
    ```sql
    SELECT COUNT(*) FROM dw_gold_enrichments;
@@ -85,11 +85,13 @@ docker-compose up -d postgres api n8n
 
 ---
 
-## Ordem dos workflows
+## Estrutura dos workflows
 
-1. **Ingestão** — busca dados na API, grava na Bronze  
-2. **Processamento** — Bronze → Gold (transformações)  
-3. **Orquestrador** — agenda Ingestão + Processamento a cada 5 min  
+| Workflow | Trigger inicial | Função |
+|----------|-----------------|--------|
+| Ingestão | **Manual Trigger** | Busca API, grava na Bronze |
+| Processamento | **Manual Trigger** | Bronze → Gold (transformações) |
+| Orquestrador | **Schedule** (5 min) | Chama Ingestão e Processamento |  
 
 ---
 
@@ -98,8 +100,8 @@ docker-compose up -d postgres api n8n
 | Decisão | Escolha | Motivo |
 |---------|---------|--------|
 | n8n + Postgres | `DB_TYPE=postgresdb` | Workflows e execuções persistidas no banco |
-| Paginação API | Code node com `fetch` | Um único node, retry em 429 e loop de páginas |
-| Retry 429 | Loop `while` dentro do Code | Aguarda 2s e tenta de novo na mesma página |
+| Paginação API | Code node + `this.helpers.httpRequest` | Faz loop por todas as páginas com retry em 429 |
+| Retry 429 | HTTP Request (Retry On Fail) | 5 tentativas, 2s entre cada |
 | Bronze→Gold | Code node com regras em JS | Mapeamento PT, categorias, flags e duração |
 | Orquestrador | Schedule 5 min + Execute Workflow | Ingestão e Processamento em sequência |
 | Credencial Postgres | Nome `Postgres Driva` | Padrão usado nos workflows; host `postgres` na rede Docker |

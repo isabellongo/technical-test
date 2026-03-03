@@ -32,6 +32,9 @@ CREATE INDEX IF NOT EXISTS idx_seed_workspace ON api_enrichments_seed(id_workspa
 CREATE INDEX IF NOT EXISTS idx_seed_status ON api_enrichments_seed(status);
 CREATE INDEX IF NOT EXISTS idx_seed_created ON api_enrichments_seed(created_at);
 
+-- Necessário para gen_random_uuid() usado no seed
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 
 -- -----------------------------------------------------------------------------
 -- 2. dw_bronze_enrichments (Camada Bronze)

@@ -2,22 +2,182 @@
   "name": "Driva - Ingestão API → Bronze",
   "nodes": [
     {
-      "parameters": {},
-      "id": "a1b2c3d4-0001-4000-8000-000000000001",
-      "name": "Manual Trigger",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [240, 300]
+      "parameters": {
+        "url": "http://api:3000/people/v1/enrichments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "=page",
+              "value": "={{ $json.page }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa4ea4be-4055-47eb-8683-72e3cf906751",
+      "name": "Fetch API Bronze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1472,
+        144
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "tMVNqGfiPFza2pVU",
+          "name": "Header Auth account"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Paginação completa com retry em 429\n// DECISÃO: Code único para simplicidade; fetch disponível em Node 18+\nconst apiKey = 'driva_test_key_abc123xyz789';\nconst baseUrl = 'http://api:3000/people/v1/enrichments';\nconst limit = 50;\nlet page = 1;\nlet totalPages = 1;\nconst allData = [];\n\nconst now = new Date().toISOString();\n\ndo {\n  let res = await fetch(`${baseUrl}?page=${page}&limit=${limit}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  \n  while (res.status === 429) {\n    await new Promise(r => setTimeout(r, 2000));\n    res = await fetch(`${baseUrl}?page=${page}&limit=${limit}`, {\n      headers: { 'Authorization': `Bearer ${apiKey}` }\n    });\n  }\n  \n  const json = await res.json();\n  totalPages = json.total_pages || 1;\n  \n  for (const item of json.data || []) {\n    allData.push({\n      json: {\n        ...item,\n        dw_ingested_at: now,\n        dw_updated_at: now\n      }\n    });\n  }\n  page++;\n} while (page <= totalPages);\n\nreturn allData.length ? allData : [{ json: { count: 0 } }];"
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "dw_bronze_enrichments"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.data.id }}",
+            "id_workspace": "={{ $json.data.id_workspace }}",
+            "workspace_name": "={{ $json.data.workspace_name }}",
+            "total_contacts": "={{ $json.data.total_contacts }}",
+            "contact_type": "={{ $json.data.contact_type }}",
+            "status": "={{ $json.data.status }}",
+            "created_at": "={{ $json.data.created_at }}",
+            "updated_at": "={{ $json.data.updated_at }}",
+            "dw_ingested_at": "={{ $now }}",
+            "dw_updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_workspace",
+              "displayName": "id_workspace",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "workspace_name",
+              "displayName": "workspace_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "total_contacts",
+              "displayName": "total_contacts",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact_type",
+              "displayName": "contact_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "dw_ingested_at",
+              "displayName": "dw_ingested_at",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "dw_updated_at",
+              "displayName": "dw_updated_at",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
       },
-      "id": "a1b2c3d4-0002-4000-8000-000000000002",
-      "name": "Buscar e paginar API",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [460, 300]
+      "id": "37fafbf6-9c65-44d4-b075-6960db20bce4",
+      "name": "Postgres Upsert",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        -1008,
+        144
+      ],
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "nrmv9McZIxEOOgTh",
+          "name": "Postgres account"
+        }
+      }
     },
     {
       "parameters": {
@@ -25,16 +185,17 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
-              "id": "cond-1",
-              "leftValue": "={{ $json.id }}",
-              "rightValue": "",
+              "id": "cc8bba93-c4ca-4317-8aca-f70182ef0623",
+              "leftValue": "={{ $node[\"Fetch API Bronze\"].json.current_page }}",
+              "rightValue": "={{ $node[\"Fetch API Bronze\"].json.total_pages }}",
               "operator": {
-                "type": "string",
-                "operation": "notEmpty"
+                "type": "number",
+                "operation": "lt"
               }
             }
           ],
@@ -42,47 +203,210 @@
         },
         "options": {}
       },
-      "id": "a1b2c3d4-0003-4000-8000-000000000003",
-      "name": "Filtrar itens válidos",
-      "type": "n8n-nodes-base.filter",
+      "id": "b83ba46f-bcbd-415f-b5ab-3d12bcf51325",
+      "name": "Has More?",
+      "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [680, 300]
+      "position": [
+        -608,
+        144
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        144
+      ],
+      "id": "0625a281-edbb-4d90-aff8-741d42b8e3ba",
+      "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "=INSERT INTO dw_bronze_enrichments (id, id_workspace, workspace_name, total_contacts, contact_type, status, created_at, updated_at, dw_ingested_at, dw_updated_at)\nVALUES ('{{ $json.id }}', '{{ $json.id_workspace }}', '{{ $json.workspace_name }}', {{ $json.total_contacts }}, '{{ $json.contact_type }}', '{{ $json.status }}', '{{ $json.created_at }}', '{{ $json.updated_at }}', '{{ $json.dw_ingested_at }}', '{{ $json.dw_updated_at }}')\nON CONFLICT (id) DO UPDATE SET\n  id_workspace = EXCLUDED.id_workspace,\n  workspace_name = EXCLUDED.workspace_name,\n  total_contacts = EXCLUDED.total_contacts,\n  contact_type = EXCLUDED.contact_type,\n  status = EXCLUDED.status,\n  created_at = EXCLUDED.created_at,\n  updated_at = EXCLUDED.updated_at,\n  dw_updated_at = EXCLUDED.dw_updated_at",
+        "fieldToSplitOut": "data",
+        "include": "allOtherFields",
         "options": {}
       },
-      "id": "a1b2c3d4-0004-4000-8000-000000000004",
-      "name": "Upsert Bronze",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.5,
-      "position": [900, 300]
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        144
+      ],
+      "id": "7f5b2cbb-2453-4889-b13a-08c9dd7f38c6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "579b7aa9-d3ce-4a2f-8836-abbcef8a5806",
+      "name": "WAIT",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        144
+      ],
+      "webhookId": "ff6c1ec1-ee7c-40fc-aa2c-3dff9f8ab760",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "19d597b5-0a0c-4fd6-ae70-6bc3ef2de2e1",
+              "name": "page",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "7555a27c-36b2-48e4-a4f2-df892ffeeb56",
+              "name": "limit",
+              "value": 50,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1680,
+        144
+      ],
+      "id": "59c5c335-3aa6-4f98-a1b7-3eae6ee7b4d6",
+      "name": "Set Variables"
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "page",
+              "type": "numberValue",
+              "numberValue": "={{ $node[\"Fetch API Bronze\"].json.current_page + 1 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1685cbfe-e026-4182-86bb-7a3c10812004",
+      "name": "Next Page",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        -608,
+        -48
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
-    "Manual Trigger": {
+    "Fetch API Bronze": {
       "main": [
-        [{ "node": "Buscar e paginar API", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Buscar e paginar API": {
+    "Postgres Upsert": {
       "main": [
-        [{ "node": "Filtrar itens válidos", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "WAIT",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Filtrar itens válidos": {
+    "Has More?": {
       "main": [
-        [{ "node": "Upsert Bronze", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Next Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Postgres Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAIT": {
+      "main": [
+        [
+          {
+            "node": "Has More?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Fetch API Bronze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Page": {
+      "main": [
+        [
+          {
+            "node": "Fetch API Bronze",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
+  "versionId": "dddf4725-bf59-476a-a954-12e1c7f603da",
   "meta": {
-    "templateCredsSetupCompleted": false
-  }
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d429e8b74241705b41001b80e5e0069daefc162bb237a5b55404df77386fd7aa"
+  },
+  "id": "FDER6qLLeSmXNg5X",
+  "tags": []
 }
