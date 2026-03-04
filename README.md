@@ -85,6 +85,10 @@ H -->|Sim| I[Melhorias opcionais]
 * **Segurança:** Implementação de Middleware para validação de API Key (Bearer Token) em todos os endpoints sensíveis.
 * **UI/UX Identitária:** Interface desenvolvida com Tailwind CSS utilizando a paleta de cores institucional da Driva para uma experiência de produto completa.
 
+## Segurança
+Durante a fase de desenvolvimento, testes e verificação inicial do sistema (como demonstrado nas configurações de ambiente deste repositório), algumas credenciais, senhas de teste e API Keys podem estar visíveis ou configuradas de forma estática.
+Essas chaves e senhas expostas têm como **única** finalidade facilitar a **validação funcional** do sistema e garantir que os fluxos de integração (como n8n, Postgres e APIs externas) estejam operando conforme o esperado. Nenhum dos dados ou credenciais apresentados é real.
+
 ## Como Executar
 Mais detalhes sobre os pré-requisitos individuais e os testes para verificação de cada etapa estão disponíveis nos README.md dentro das pastas /db, /api, /frontend, /n8n.
 
