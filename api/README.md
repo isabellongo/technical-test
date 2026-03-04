@@ -114,17 +114,10 @@ curl.exe -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhos
 ## Observabilidade e logs
 
 - A API expõe logs básicos (startup, conexões DB, erros). Em ambiente containerizado, verifique com `docker-compose logs -f api`.
-- Para produção, agregue um logger estruturado e métricas (Prometheus/Grafana) — sugestão na seção de melhorias.
 
 ## Seed e banco
 
-- Há uma tabela opcional `api_enrichments_seed` (preenchida via `db/init.sql`) usada para simular milhares de registros. A API pagina esses dados via SQL.
-
-## Boas práticas e melhorias sugeridas
-
-- Adicionar testes automatizados (unit e integração) para endpoints e transformações do Gold.
-- Expor métricas (Prometheus) e healthchecks mais completas (readiness/liveness).
-- Implementar contratos OpenAPI/Swagger.
+- Há uma tabela opcional `api_enrichments_seed` (preenchida via `db/init.sql`) usada para simular milhares de registros. A API pagina esses dados.
 
 ## Local dos arquivos importantes
 
@@ -133,4 +126,4 @@ curl.exe -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhos
 - Inicialização DB: `db/init.sql`
 
 ---
-Versão deste README: padronizado para instruções de execução e testes manuais.
+
