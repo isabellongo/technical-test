@@ -107,7 +107,11 @@ N8N_PORT=5678
 docker-compose up -d
 ```
 
-3. **Importar Workflows:** Acesse o n8n em http://localhost:5678 e importe os arquivos JSON da pasta /n8n. O Orquestrador está agendado para rodar a cada 5 minutos.
+3. **Configurar o n8n**
+	1. Acesse http://localhost:5678.
+	2. Importe os arquivos JSON localizados na pasta /n8n.
+	3. Configure as credenciais do Postgres e a API Key (driva_test_key_abc123xyz789).
+	4. Execute o Orquestrador para iniciar a primeira carga.
 
 **Portas dos Serviços**
 - Frontend (Docker): http://localhost:5173
