@@ -72,12 +72,4 @@ SELECT COUNT(*) FROM dw_bronze_enrichments;
 SELECT COUNT(*) FROM dw_gold_enrichments;
 SELECT status_processamento, COUNT(*) FROM dw_gold_enrichments GROUP BY status_processamento;
 ```
-
-## Recomendações operacionais
-
-- Crie índices nas colunas usadas para filtros/pesquisa em Gold (ex.: `id_workspace`, `status_processamento`, `data_atualizacao_dw`).
-- Mantenha `init.sql` idempotente (CREATE TABLE IF NOT EXISTS / ALTER TABLE) se for reaplicável.
-- Para testes locais repetíveis, mantenha um pequeno script para repopular `api_enrichments_seed` com dados determinísticos.
-
----
 Local do script: `db/init.sql`
