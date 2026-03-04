@@ -1,19 +1,3 @@
-# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 # Frontend — Dashboard (React + Vite)
 
 Este diretório contém o dashboard de demonstração (React + TypeScript + Vite) que consome os endpoints de analytics da API.
@@ -21,7 +5,7 @@ Este diretório contém o dashboard de demonstração (React + TypeScript + Vite
 ## Requisitos técnicos
 
 - Node.js 18+ e npm (ou yarn/pnpm)
-- (Opcional) Docker, caso queira subir via container
+- Docker, caso queira subir via container
 
 ## Variáveis / Configuração
 
@@ -52,7 +36,7 @@ npm run build
 npm run preview
 ```
 
-## Rodar via Docker (opcional)
+## Rodar via Docker
 
 Se preferir executar o frontend em um container:
 
@@ -65,25 +49,12 @@ Observação: em Windows, `host.docker.internal` permite que o container acesse 
 
 ## Testes / Verificação do funcionamento
 
-- A aplicação não contém testes automatizados neste repositório (sugestão: adicionar testes com React Testing Library).
 - Testes manuais de verificação:
   - Abra `http://localhost:5173`
   - Verifique a página principal com KPIs (total de enriquecimentos, % sucesso, tempo médio)
   - Navegue para a tabela/lista de enrichments e confirme paginação/filtros
 
 Exemplo: se a API estiver rodando localmente e populada via n8n, as chamadas no frontend devem retornar dados visíveis.
-
-## Dicas de desenvolvimento
-
-- Ajuste a URL da API em `frontend/src/services/api.ts` através da variável `import.meta.env.VITE_API_URL`.
-- Para hot-reload garantir que o Vite foi iniciado com a variável correta.
-- Para produção, configure `VITE_API_URL` no processo de build.
-
-## Melhorias sugeridas
-
-- Adicionar testes unitários e de integração para os componentes-chave (KPIs, tabelas).
-- Adicionar tratamento de erros na UI (mensagens claras ao usuário quando API retorna 429/erro).
-- Adicionar storybook para documentar componentes UI.
 
 ---
 Arquivo principal do frontend: `frontend/src/services/api.ts` (configurar URL da API).
