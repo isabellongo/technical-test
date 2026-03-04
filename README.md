@@ -3,8 +3,10 @@
 Este repositório contém a solução completa para o desafio técnico da **Driva**. A aplicação consiste em um ecossistema conteinerizado que realiza a ingestão, processamento e visualização de dados de enriquecimento B2B, seguindo a arquitetura de **Medallion Data Warehouse (Bronze & Gold)**.
 
 ## Arquitetura do Sistema
-
-A solução foi desenhada para ser resiliente e escalável, utilizando o **n8n** como orquestrador de ETL, **Go** para a camada de serviços e **React** para a interface de monitoramento.
+* **Go (Gin):** Escolhido pela alta performance em concorrência e baixo footprint de memória, ideal para serviços de alto volume de dados e APIs de baixa latência.
+* **n8n:** Utilizado como motor de orquestração por permitir rápida iteração em fluxos de ETL complexos com gestão nativa de retries e agendamento.
+* **PostgreSQL:** Banco de dados relacional robusto para garantir a integridade referencial e suporte nativo a operações de UPSERT e tipos JSONB.
+* **React + Vite:** Stack moderna para o frontend que garante builds rápidos e uma interface reativa para visualização de métricas.
 
 ```mermaid
 flowchart LR
@@ -63,36 +65,21 @@ F --> G[5. README + Vídeo]
 G --> H{MVP completo?}
 H -->|Sim| I[Melhorias opcionais]
 ```
-## Decisões de Engenharia
+## Decisões de Engenharia e Boas Práticas
 
-1. **Idempotência e Resiliência** (Cláusula UPSERT): A lógica de Upsert nas camadas de dados garante que não haverá duplicidade.
-2. **Separação de preocupações:** A camada **Bronze** armazena o dado bruto (Raw), para que mudanças nas regras de negócio entre Bronze -> Gold não precisem buscar todos os dados na API novamente.
-3. **Estratégia de Paginação e Gestão de Memória:** Para garantir que o projeto funcione com qualquer quantidade de entradas, foram aplicadas as seguintes soluções: 
-	- Prevenção de Buffer Overflow: Em vez de tentar carregar todos os dados em memória para uma única inserção, o pipeline processa "página por página". Isso mantém o consumo de RAM do container n8n constante e baixo, independente do tamanho do dataset.
-	- Iteração Sequencial vs. Rate Limit: A escolha pela paginação sequencial (em vez de disparos paralelos) foi uma decisão deliberada para respeitar o Rate Limiting da API e garantir que a ordem dos logs de ingestão (dw_ingested_at) seja consistente.
-4. **Estratégia de Backoff (Tratamento de 429):** A API fonte simula limites de requisição.
-	- Uma lógica de **Wait/Retry** que atua como um _Exponential Backoff_ simplificado foi utilizada, evitando que o pipeline entre em um loop de erro infinito e "estresse" o servidor da API.
-  
-## Boas práticas aplicadas:
-- **Separação Clara de Responsabilidades:** Arquitetura limpa com divisão entre lógica de domínio (internal), rotas e repositórios na API Go.
+### Confiabilidade de Dados (Idempotência e Medallion)
+* **Cláusula UPSERT:** A lógica de ON CONFLICT nas camadas Bronze e Gold garante que o pipeline seja idempotente. Se o job falhar ou rodar em duplicidade, o banco apenas atualiza o estado atual em vez de gerar registros duplicados.
+* **Arquitetura Medallion:** A camada Bronze captura o dado bruto (Raw) de forma fiel. Isso permite que novas regras de negócio na Gold sejam aplicadas retroativamente sem a necessidade de re-onerar a API fonte.
 
-- **Conteinerização Full-Stack:** Todo o ambiente (Postgres, n8n, API e Frontend) sobe via Docker, garantindo paridade de ambiente e facilidade de deploy (Publishing).
+### Eficiência de Pipeline (Paginação e Backoff)
+* **Gestão de Memória:** O pipeline processa os dados página por página em vez de carregar 5.000 registros na memória do n8n de uma vez, prevenindo Buffer Overflows.
+* **Exponential Backoff:** Em caso de erro 429 (Too Many Requests), o workflow implementa uma lógica de espera inteligente, evitando o estresse desnecessário da infraestrutura.
+* **Orquestração Atômica:** O Orquestrador garante a integridade sequencial: a camada Gold só inicia o processamento após a confirmação de sucesso da ingestão na Bronze.
 
-- **Resiliência no Pipeline (n8n):** Tratamento de Rate Limit (429 Too Many Requests) com políticas de Retry e Backoff.
-
-	- Paginação inteligente via loop dinâmico que detecta o fim dos registros na origem.
-
-	- Mecanismo de controle para evitar disparos simultâneos e garantir a integridade da sequência de páginas.
-
-- **Modelagem Medallion** (Bronze/Gold): 
-	- **Bronze:** Captura fiel (Raw) com campos de controle dw_ingested_at e dw_updated_at.
-	- **Gold:** Camada de negócio com transformações de nomes (PT-BR), tradução de status, cálculos de duração de processamento e segmentação de jobs por tamanho.
-
-- **Segurança:** Implementação de Middleware de autenticação via API Key (Bearer Token) em todos os endpoints sensíveis.
-
-- **UI/UX Identitária:** Dashboard desenvolvido com React + Vite e Tailwind CSS, aplicando a paleta de cores institucional da Driva.
-
-- **Versionamento e Testes:** Uso de Git para versionamento e testes realizados para cada etapa do projeto antes da integração final (detalhados nos sub-readmes).
+### Qualidade de Software
+* **Clean Architecture:** API Go estruturada com separação clara entre lógica de domínio (internal), repositórios e rotas.
+* **Segurança:** Implementação de Middleware para validação de API Key (Bearer Token) em todos os endpoints sensíveis.
+* **UI/UX Identitária:** Interface desenvolvida com Tailwind CSS utilizando a paleta de cores institucional da Driva para uma experiência de produto completa.
 
 ## Como Executar
 Mais detalhes sobre os pré-requisitos individuais e os testes para verificação de cada etapa estão disponíveis nos README.md dentro das pastas /db, /api, /frontend, /n8n.
@@ -157,4 +144,12 @@ Um vídeo explicando a arquitetura, o funcionamento do pipeline e a visualizaç�
 
 👉 [LINK_PARA_O_VIDEO_AQUI]
 
-*Desenvolvido como parte do desafio técnico para o time de Tech da Driva.*
+## Melhorias e Expansões Futuras
+- **Watermark para Ingestão Incremental:** Atualmente, o pipeline processa o dataset completo para garantir a integridade. Uma melhoria crítica (já com 50% da infraestrutura pronta no banco) é a implementação de Watermark. Isso permitirá que o n8n consulte apenas registros criados ou alterados desde a última execução bem-sucedida.
+- **Observabilidade e Logs:**
+	- Health Checks Dinâmicos: Implementação de um endpoint /health na API Go que verifica a conectividade ativa com o Postgres.
+	- Monitoramento de Workflows: Integração do n8n com ferramentas de log externas para alertar caso o workflow falhe consecutivamente.
+- **Qualidade de Dados:**
+	- Camada de Validação: Adição de testes de integridade entre a Bronze e a Gold (ex: garantir que total_contacts nunca seja negativo) antes da transformação final.
+
+*Desenvolvido por Isabel Cristina Kavalco Longo como parte do desafio técnico para o time de Tech da Driva.*
