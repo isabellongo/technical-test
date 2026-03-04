@@ -1,116 +1,108 @@
-# API Driva - Fase 2
+# API — Enrichments & Analytics
 
-API Go + Gin que expõe a fonte de enrichments (simulada) e endpoints de analytics.
+API escrita em Go (Gin) que fornece:
 
----
+- Um endpoint que simula a fonte de enrichments (`/people/v1/enrichments`) com paginação, API Key e comportamento de rate-limit simulado.
+- Endpoints de analytics que leem a camada Gold (`/analytics/*`) para consumo do dashboard.
 
-## Pré-requisitos
+Este README padroniza as instruções de execução, testes e validação da API.
 
-### 1. Instalar Go 1.21+
+## Requisitos técnicos
 
-- **Windows:** Baixe em [golang.org/dl](https://go.dev/dl/) e execute o instalador.
-- **Verificar:** `go version`
-
-### 2. Instalar dependências do projeto
-
-Na pasta `api/`:
-
-```powershell
-cd api
-go mod download
-```
-
-Ou, para baixar e atualizar `go.sum`:
-
-```powershell
-go mod tidy
-```
-
----
+- Go 1.21+ (opcional — só necessário se rodar localmente sem Docker)
+- Docker & Docker Compose (para rodar Postgres, n8n e a API em containers)
+- Postgres 14+ (o compose já cuida disso)
 
 ## Variáveis de ambiente
 
-Defina na raiz do projeto (arquivo `.env`) ou exporte no terminal:
+Crie um arquivo `.env` na raiz do projeto (ou exporte variáveis) com pelo menos:
 
-| Variável        | Descrição                     | Exemplo                    |
-|-----------------|-------------------------------|----------------------------|
-| POSTGRES_HOST   | Host do Postgres              | `localhost` (local) / `postgres` (Docker) |
-| POSTGRES_PORT   | Porta do Postgres             | `5432`                     |
-| POSTGRES_USER   | Usuário                       | `postgres`                 |
-| POSTGRES_PASSWORD | Senha                       | `changeme`                 |
-| POSTGRES_DB     | Nome do banco                 | `driva`                    |
-| API_PORT        | Porta da API                  | `3000`                     |
-| API_KEY         | Chave para Authorization      | `driva_test_key_abc123xyz789` |
+- POSTGRES_USER (ex: postgres)
+- POSTGRES_PASSWORD (ex: postgres)
+- POSTGRES_DB (ex: driva)
+- API_PORT (ex: 3000)
+- API_KEY (ex: driva_test_key_abc123xyz789)
 
-Para Docker, o compose injeta as variáveis automaticamente. `POSTGRES_HOST` é definido como `postgres` dentro da rede.
+Dentro do Docker Compose, o host do Postgres é `postgres`.
 
----
+## Como rodar (modo rápido com Docker)
 
-## Rodar localmente (sem Docker)
-
-1. Subir o Postgres:
-   ```powershell
-   docker-compose up -d postgres
-   ```
-
-2. Criar `.env` na raiz (se ainda não tiver) e garantir `API_KEY`:
-   ```
-   API_KEY=driva_test_key_abc123xyz789
-   ```
-
-3. Rodar a API:
-   ```powershell
-   cd api
-   go run ./cmd/main.go
-   ```
-
----
-
-## Rodar via Docker
+1. Garanta que o `.env` exista na raiz.
+2. Suba os serviços necessários:
 
 ```powershell
 docker-compose up -d postgres api
 ```
 
----
-
-## Testes da Fase 2
-
-> **PowerShell:** Use `Invoke-WebRequest` ou `curl.exe` (não `curl`, que é alias com sintaxe diferente).
-
-### Health check
+3. Verifique que a API está respondendo:
 
 ```powershell
 (Invoke-WebRequest -Uri "http://localhost:3000/health").Content
 ```
 
-Resposta esperada: `{"status":"ok"}`
+Resposta esperada: {"status":"ok"}
 
-### Fonte - Enrichments paginados
+## Como rodar localmente (sem Docker)
+
+1. Suba um Postgres local ou via Docker Compose:
+
+```powershell
+docker-compose up -d postgres
+```
+
+2. Na raiz, crie `.env` com as variáveis mínimas.
+
+3. Instale dependências e rode:
+
+```powershell
+cd api
+go mod download
+go run ./cmd/main.go
+```
+
+## Endpoints principais
+
+Autenticação: `Authorization: Bearer {API_KEY}`
+
+- GET /people/v1/enrichments
+   - Query: `page` (default 1), `limit` (default 50, max 100)
+   - Resposta: objeto com `meta` (current_page, items_per_page, total_items, total_pages) e `data` (array de enrichments)
+   - Observação: endpoint pode retornar 429 em simulações; n8n deve implementar retry/backoff.
+
+- GET /analytics/overview
+   - Retorna KPIs (total de jobs, % sucesso, tempo médio, etc.) consultando a camada Gold.
+
+- GET /analytics/enrichments
+   - Listagem paginada/filtrável da Gold (filtros exemplares: `id_workspace`, `status_processamento`, período, `categoria_tamanho_job`).
+
+## Testes manuais (PowerShell)
+
+Substitua a variável `API_KEY` conforme seu `.env` se necessário.
+
+Health check:
+
+```powershell
+(Invoke-WebRequest -Uri "http://localhost:3000/health").Content
+```
+
+Fonte — Enrichments (exemplo):
 
 ```powershell
 (Invoke-WebRequest -Uri "http://localhost:3000/people/v1/enrichments?page=1&limit=10" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
-(Em ~5% das requisições pode retornar 429 — simulação para teste de retry no n8n. Se der 429, tente novamente.)
+Se receber `429 Too Many Requests`, reenvie após um pequeno intervalo; o comportamento é intencional para testar retry.
 
-### Analytics - Overview (KPIs)
+Analytics — Overview:
 
 ```powershell
 (Invoke-WebRequest -Uri "http://localhost:3000/analytics/overview" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
-Nota: A Gold pode estar vazia até rodar os workflows n8n. Nesse caso, totais serão 0.
-
-### Analytics - Enrichments paginados
+Analytics — Enrichments (com filtros):
 
 ```powershell
-(Invoke-WebRequest -Uri "http://localhost:3000/analytics/enrichments?page=1&limit=10" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
-```
-
-Com filtros (opcionais):
-```powershell
-(Invoke-WebRequest -Uri "http://localhost:3000/analytics/enrichments?page=1&limit=10&status_processamento=CONCLUIDO&categoria_tamanho_job=MEDIO" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
+(Invoke-WebRequest -Uri "http://localhost:3000/analytics/enrichments?page=1&limit=10&status_processamento=CONCLUIDO" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
 ### Alternativa com curl.exe (Windows)
@@ -119,25 +111,26 @@ Com filtros (opcionais):
 curl.exe -H "Authorization: Bearer driva_test_key_abc123xyz789" "http://localhost:3000/people/v1/enrichments?page=1&limit=10"
 ```
 
+## Observabilidade e logs
+
+- A API expõe logs básicos (startup, conexões DB, erros). Em ambiente containerizado, verifique com `docker-compose logs -f api`.
+- Para produção, agregue um logger estruturado e métricas (Prometheus/Grafana) — sugestão na seção de melhorias.
+
+## Seed e banco
+
+- Há uma tabela opcional `api_enrichments_seed` (preenchida via `db/init.sql`) usada para simular milhares de registros. A API pagina esses dados via SQL.
+
+## Boas práticas e melhorias sugeridas
+
+- Adicionar testes automatizados (unit e integração) para endpoints e transformações do Gold.
+- Expor métricas (Prometheus) e healthchecks mais completas (readiness/liveness).
+- Implementar contratos OpenAPI/Swagger.
+
+## Local dos arquivos importantes
+
+- Código: `api/`
+- Dockerfile: `api/Dockerfile`
+- Inicialização DB: `db/init.sql`
+
 ---
-
-## Teste sem chave (esperado: 401)
-
-```powershell
-Invoke-WebRequest -Uri "http://localhost:3000/people/v1/enrichments"
-```
-
-Resposta esperada: erro com `{"error":"missing Authorization header"}`
-
----
-
-## Decisões técnicas
-
-| Decisão          | Escolha            | Motivo                                          |
-|------------------|--------------------|--------------------------------------------------|
-| Driver DB        | pgx/v5             | Driver oficial e mantido, suporte a UUID nativo  |
-| Framework        | Gin                | Conforme plano; leve, middleware pronto          |
-| Simulação 429    | 5% por requisição  | Endpoint `/people/v1/enrichments` apenas; para testar retry no n8n |
-| API Key          | Bearer no header   | `Authorization: Bearer <key>`; valor do .env com fallback para `driva_test_key_abc123xyz789` |
-| Paginação        | page, limit        | default 50, max 100                              |
-| Dockerfile       | Multi-stage Alpine | Imagem final pequena                             |
+Versão deste README: padronizado para instruções de execução e testes manuais.

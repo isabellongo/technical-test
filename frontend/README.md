@@ -14,83 +14,77 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+# Frontend — Dashboard (React + Vite)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Este diretório contém o dashboard de demonstração (React + TypeScript + Vite) que consome os endpoints de analytics da API.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Requisitos técnicos
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+ e npm (ou yarn/pnpm)
+- (Opcional) Docker, caso queira subir via container
 
-    ## Getting started (run the frontend)
+## Variáveis / Configuração
 
-    Prerequisites:
+O frontend espera uma variável para apontar a API. No Vite a convenção comum é `VITE_API_URL`.
 
-    - Node.js 18+ and npm (or yarn/pnpm).
+- Exemplo `.env` (na pasta `frontend` ou na raiz dependendo do setup):
 
-    Install dependencies and run in development mode:
-
-    ```powershell
-    cd frontend
-    npm install
-    npm run dev
-    ```
-
-    Build for production and preview:
-
-    ```powershell
-    npm run build
-    npm run preview
-    ```
-
-    The dev server runs by default on http://localhost:5173. The frontend in this repo is a minimal Vite + React app used as UI for the sample API; adjust API URLs in the source if necessary.
+```
+VITE_API_URL=http://localhost:3000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+No repositório, a configuração da chamada à API está em `frontend/src/services/api.ts` — ajuste `VITE_API_URL` se necessário.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Como rodar em desenvolvimento
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+cd frontend
+npm install
+npm run dev
 ```
+
+O servidor de desenvolvimento roda em `http://localhost:5173` por padrão.
+
+## Build e preview
+
+```powershell
+npm run build
+npm run preview
+```
+
+## Rodar via Docker (opcional)
+
+Se preferir executar o frontend em um container:
+
+```powershell
+docker build -f frontend/Dockerfile -t driva-frontend:local frontend
+docker run --rm -p 5173:5173 -e VITE_API_URL=http://host.docker.internal:3000 driva-frontend:local
+```
+
+Observação: em Windows, `host.docker.internal` permite que o container acesse serviços expostos no host (ex.: API em `localhost`). Quando em Compose, prefira usar a rede do Compose e o serviço `api`.
+
+## Testes / Verificação do funcionamento
+
+- A aplicação não contém testes automatizados neste repositório (sugestão: adicionar testes com React Testing Library).
+- Testes manuais de verificação:
+  - Abra `http://localhost:5173`
+  - Verifique a página principal com KPIs (total de enriquecimentos, % sucesso, tempo médio)
+  - Navegue para a tabela/lista de enrichments e confirme paginação/filtros
+
+Exemplo: se a API estiver rodando localmente e populada via n8n, as chamadas no frontend devem retornar dados visíveis.
+
+## Dicas de desenvolvimento
+
+- Ajuste a URL da API em `frontend/src/services/api.ts` através da variável `import.meta.env.VITE_API_URL`.
+- Para hot-reload garantir que o Vite foi iniciado com a variável correta.
+- Para produção, configure `VITE_API_URL` no processo de build.
+
+## Melhorias sugeridas
+
+- Adicionar testes unitários e de integração para os componentes-chave (KPIs, tabelas).
+- Adicionar tratamento de erros na UI (mensagens claras ao usuário quando API retorna 429/erro).
+- Adicionar storybook para documentar componentes UI.
+
+---
+Arquivo principal do frontend: `frontend/src/services/api.ts` (configurar URL da API).
+        tsconfigRootDir: import.meta.dirname,

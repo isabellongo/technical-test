@@ -1,50 +1,83 @@
-# Validação do banco (Fase 1.4)
+# Banco de dados — inicialização e validação
 
-## Pré-requisitos
+Este diretório contém o `init.sql` usado para criar as tabelas do data warehouse (Bronze, Gold) e, opcionalmente, a tabela seed que popula a API simulada.
 
-- Docker & Docker Compose (para subir o serviço Postgres via `docker-compose.yml`).
+## Requisitos
 
-## Subir Postgres via Docker Compose
+- Docker & Docker Compose (o `docker-compose.yml` da raiz já expõe o serviço `postgres`).
+
+## Como subir o Postgres (com compose)
 
 ```powershell
 docker-compose up -d postgres
 ```
 
-O serviço Postgres no compose é nomeado `postgres` e o container terá o nome `driva-postgres`.
+O serviço do compose normalmente é nomeado `postgres`. O container pode aparecer com um nome como `driva-postgres` dependendo do `docker-compose.yml`.
 
-### Importante: inicialização do banco
+### Inicialização automática (init.sql)
 
-O arquivo `db/init.sql` está montado no container em `/docker-entrypoint-initdb.d/01-init.sql` e será executado automaticamente na primeira inicialização do banco (quando o volume estiver vazio). Se precisar reaplicar o script desde o início, remova o volume do Postgres e suba novamente:
+O arquivo `db/init.sql` é montado no container em `/docker-entrypoint-initdb.d/01-init.sql` e será executado automaticamente apenas na primeira inicialização do volume do Postgres. Para reaplicar o script desde zero, remova o volume do Postgres e suba novamente:
 
 ```powershell
 docker-compose down -v
 docker-compose up -d postgres
 ```
 
-## Conectar ao Postgres
+Observação: remover o volume apaga todos os dados do banco — use com cautela.
+
+## Como conectar ao Postgres
+
+Via Docker (dentro do container):
 
 ```powershell
-# Via Docker (dentro do container)
-docker exec -it driva-postgres psql -U postgres -d driva
-
-# Via cliente local (psql, DBeaver, etc.)
-# Host: localhost | Port: 5432 | User: postgres | Password: <POSTGRES_PASSWORD> | DB: driva
+docker exec -it <nome_do_container_postgres> psql -U postgres -d driva
 ```
 
-## Queries de validação
+Via cliente local (psql, DBeaver, DataGrip):
+
+- Host: localhost
+- Porta: 5432
+- User: postgres
+- Password: <POSTGRES_PASSWORD> (ver `.env`)
+- Database: driva
+
+## Estrutura esperada das tabelas (resumo)
+
+As tabelas principais criadas por `init.sql` (nomes sugestivos):
+
+- `api_enrichments_seed` — dados seed que simulam milhares de enrichments (usada pela API fonte).
+- `dw_bronze_enrichments` — camada Bronze: dados brutos ingeridos (camada de captura fiel).
+- `dw_gold_enrichments` — camada Gold: dados transformados, com colunas em português e campos calculados.
+- `dw_pipeline_state` (opcional) — controle do pipeline (última página processada, watermark, logs simples).
+
+Consulte o `db/init.sql` para a definição completa de colunas e índices.
+
+## Queries úteis para validação
 
 ```sql
--- Verificar tabelas
+-- listar tabelas
 \dt
 
--- Contar registros no seed
+-- contar registros no seed (deve ser grande o suficiente para testar paginação)
 SELECT COUNT(*) FROM api_enrichments_seed;
 
--- Amostra do seed
+-- amostra do seed
 SELECT id, workspace_name, total_contacts, contact_type, status
 FROM api_enrichments_seed LIMIT 5;
 
--- Verificar Bronze e Gold (vazios até rodar os workflows)
+-- validar ingestão Bronze
 SELECT COUNT(*) FROM dw_bronze_enrichments;
+
+-- validar processamento Gold
 SELECT COUNT(*) FROM dw_gold_enrichments;
+SELECT status_processamento, COUNT(*) FROM dw_gold_enrichments GROUP BY status_processamento;
 ```
+
+## Recomendações operacionais
+
+- Crie índices nas colunas usadas para filtros/pesquisa em Gold (ex.: `id_workspace`, `status_processamento`, `data_atualizacao_dw`).
+- Mantenha `init.sql` idempotente (CREATE TABLE IF NOT EXISTS / ALTER TABLE) se for reaplicável.
+- Para testes locais repetíveis, mantenha um pequeno script para repopular `api_enrichments_seed` com dados determinísticos.
+
+---
+Local do script: `db/init.sql`

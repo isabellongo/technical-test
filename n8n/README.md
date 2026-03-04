@@ -1,116 +1,99 @@
-# n8n - Workflows Driva (Fase 3)
+# n8n — Workflows do pipeline (Ingestão, Processamento e Orquestração)
 
-Orquestração do pipeline de ingestão (API → Bronze → Gold).
+Este diretório contém os exports dos workflows do n8n usados para:
 
----
+- Ingestão: buscar a API de enrichments e persistir na camada Bronze.
+- Processamento: transformar registros da Bronze em Gold (camada analítica).
+- Orquestrador: agendar (5 minutos) e encadear ingestão → processamento.
 
-## Pré-requisitos
+## Requisitos
 
-### 1. Subir os serviços
+- Docker & Docker Compose (o `docker-compose.yml` já referencia o serviço `n8n`).
+- Acesso ao serviço: http://localhost:5678 quando em Docker Compose.
+
+## Como subir o n8n (com Docker Compose)
 
 ```powershell
 docker-compose up -d postgres api n8n
 ```
 
-> Se o n8n já rodou antes com SQLite (padrão) e você mudou para Postgres, pode ser necessário:  
-> `docker-compose down` e `docker-compose up -d` para o n8n criar as tabelas no Postgres.
+Se já houver dados antigos em SQLite e você mudou para Postgres, faça `docker-compose down` e depois `docker-compose up -d` para criar as tabelas no Postgres.
 
-### 2. Acessar o n8n
+## Acessando o n8n
 
-- **URL:** http://localhost:5678
-- **Login:** admin / admin (conforme docker-compose)
+- URL: http://localhost:5678
+- Credenciais padrão (quando criado via compose): `admin` / `admin` — verifique `docker-compose.yml` para valores.
 
-### 3. Criar credencial Postgres
+## Criar credencial Postgres no n8n
 
-1. No n8n: **Settings** (engrenagem) → **Credentials** → **Add Credential**
-2. Busque **Postgres**
-3. Preencha:
-   - **Host:** `postgres` (nome do serviço no Docker)
-   - **Database:** `driva` (ou o valor de `POSTGRES_DB` no .env)
-   - **User:** `postgres` (ou `POSTGRES_USER`)
-   - **Password:** senha do seu `.env` (`POSTGRES_PASSWORD`)
-   - **Port:** `5432`
-4. **Nome sugerido:** `Postgres Driva` (para bater com os workflows)
-5. Salve
-
----
+1. Settings → Credentials → Add Credential → Postgres
+2. Preencha com:
+   - Host: `postgres`
+   - Database: `driva`
+   - User: `postgres` (ou `POSTGRES_USER`)
+   - Password: `POSTGRES_PASSWORD`
+   - Port: `5432`
+3. Nome recomendado: `Postgres Driva`
 
 ## Importar workflows
 
-1. Menu (três pontinhos) → **Import from File**
-2. Selecione os arquivos na pasta `n8n/`, **nessa ordem** (cada arquivo = 1 workflow):
+1. Menu (três pontinhos) → Import from File
+2. Importe, na ordem abaixo, os arquivos contidos nesta pasta:
    - `01-ingestao-api-bronze.json`
    - `02-processamento-bronze-gold.json`
    - `03-orquestrador.json`
-3. Em cada workflow, nos nós **Postgres**:
-   - Clique no nó → **Credential to connect with** → selecione `Postgres Driva`
-4. No **Orquestrador**, nos nós **Execute Workflow**:
-   - Se aparecer "Workflow not found", selecione manualmente **Driva - Ingestão API → Bronze** e **Driva - Processamento Bronze → Gold**
+3. Para cada nó Postgres, selecione a credential criada (`Postgres Driva`).
+4. No Orquestrador, valide os nós Execute Workflow apontando para os workflows importados.
 
----
+## Testes / Validação (passos rápidos)
 
-## Testes da Fase 3
+1. Testar ingestão manual:
+   - Abra `Driva - Ingestão API → Bronze` e clique em Execute (Manual Trigger).
+   - Verifique no Postgres:
 
-### 1. Testar Ingestão manualmente
-
-1. Abra o workflow **Driva - Ingestão API → Bronze**
-2. O workflow começa com **Manual Trigger** — clique em **Execute Workflow** (ou no ▶ do node Manual Trigger) para rodar
-3. Verifique no Postgres:
    ```sql
    SELECT COUNT(*) FROM dw_bronze_enrichments;
    ```
-   Esperado: ~5000 registros
 
-### 2. Testar Processamento manualmente
+   Esperado: registros importados (seed padrão ~5000).
 
-1. Abra **Driva - Processamento Bronze → Gold** (também inicia com **Manual Trigger**)
-2. Clique em **Execute Workflow**
-3. Verifique:
+2. Testar processamento manual:
+   - Abra `Driva - Processamento Bronze → Gold` e Execute.
+   - Verifique:
+
    ```sql
    SELECT COUNT(*) FROM dw_gold_enrichments;
    SELECT status_processamento, COUNT(*) FROM dw_gold_enrichments GROUP BY status_processamento;
    ```
 
-### 3. Testar Orquestrador (manual)
+3. Testar orquestrador:
+   - Abra `Driva - Orquestrador` e execute manualmente para simular o cron.
+   - Ou ative (toggle) para que rode a cada 5 minutos.
 
-1. Abra **Driva - Orquestrador**
-2. **Execute Workflow** (simula uma execução; o trigger por tempo roda a cada 5 min)
-3. Ou **ative** o workflow (toggle) para rodar automaticamente a cada 5 min
-
-### 4. Validar API analytics após rodar os workflows
+4. Validar API Analytics:
 
 ```powershell
 (Invoke-WebRequest -Uri "http://localhost:3000/analytics/overview" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
+## Observabilidade e boas práticas nos workflows
+
+- Implementar logging (nodes de Set/Function que gravam contagem/erros em uma tabela `dw_pipeline_state`).
+- Retry em 429 (HTTP Request): backoff exponencial, 5 tentativas é um bom ponto inicial.
+- Usar Execuções chamáveis (Execute Workflow) para manter ingestão e processamento modulares.
+
+## Estrutura e decisões técnicas (resumo)
+
+- DB Type: `postgresdb` (persistência de workflows/executions no Postgres).
+- Paginação da API: loop via code node (`this.helpers.httpRequest`) com tratamento de 429.
+- Bronze→Gold: Code node com regras de tradução e cálculos (duracao, tempo_por_contato, flags).
+- Orquestrador: agendador 5 minutos → chama ingestão → quando concluído chama processamento.
+
+## Arquivos nesta pasta
+
+- `01-ingestao-api-bronze.json` — workflow de ingestão (importar primeiro)
+- `02-processamento-bronze-gold.json` — workflow de transformação
+- `03-orquestrador.json` — scheduler e encadeamento
+
 ---
-
-## Estrutura dos workflows
-
-| Workflow | Trigger inicial | Função |
-|----------|-----------------|--------|
-| Ingestão | **Manual Trigger** | Busca API, grava na Bronze |
-| Processamento | **Manual Trigger** | Bronze → Gold (transformações) |
-| Orquestrador | **Schedule** (5 min) | Chama Ingestão e Processamento |  
-
----
-
-## Decisões técnicas
-
-| Decisão | Escolha | Motivo |
-|---------|---------|--------|
-| n8n + Postgres | `DB_TYPE=postgresdb` | Workflows e execuções persistidas no banco |
-| Paginação API | Code node + `this.helpers.httpRequest` | Faz loop por todas as páginas com retry em 429 |
-| Retry 429 | HTTP Request (Retry On Fail) | 5 tentativas, 2s entre cada |
-| Bronze→Gold | Code node com regras em JS | Mapeamento PT, categorias, flags e duração |
-| Orquestrador | Schedule 5 min + Execute Workflow | Ingestão e Processamento em sequência |
-| Credencial Postgres | Nome `Postgres Driva` | Padrão usado nos workflows; host `postgres` na rede Docker |
-| API URL no Code | `http://api:3000` | Nome do serviço na rede Docker Compose |
-
-### Regras Bronze → Gold
-
-- **status_processamento:** PROCESSING→EM_PROCESSAMENTO, COMPLETED→CONCLUIDO, FAILED→FALHOU, CANCELED→CANCELADO
-- **tipo_contato:** PERSON→PESSOA, COMPANY→EMPRESA
-- **categoria_tamanho_job:** 0–100 PEQUENO, 101–500 MEDIO, 501–1500 GRANDE, >1500 MUITO_GRANDE
-- **processamento_sucesso:** `true` só se status = COMPLETED
-- **necessita_reprocessamento:** `true` se status = FAILED ou PROCESSING
+Notas: se alterar URLs (ex.: `http://api:3000`), atualize os code nodes que fazem as requisições.
