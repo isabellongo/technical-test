@@ -150,7 +150,7 @@ Para detalhes específicos de cada componente, consulte os arquivos README inter
 ## Demonstração
 Um vídeo explicando a arquitetura, o funcionamento do pipeline e a visualização dos dados no Dashboard pode ser encontrado no link abaixo:
 
-👉 [LINK_PARA_O_VIDEO_AQUI]
+👉 https://youtu.be/GOc-447Um8Q
 
 ## Melhorias e Expansões Futuras
 ### Observabilidade e Saúde do Sistema
