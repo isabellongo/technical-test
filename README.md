@@ -115,6 +115,23 @@ docker-compose up -d
 - n8n: http://localhost:5678
 - Postgres: http://localhost:5432
 
+**Testando os Endpoints**
+1. Consumo da Fonte (paginado):
+```
+curl -H "Authorization: Bearer driva_test_key_abc123xyz789" \
+"http://localhost:3000/people/v1/enrichments?page=1&limit=10"
+```
+2. Analytics Overview: 
+```
+curl -H "Authorization: Bearer driva_test_key_abc123xyz789" \
+"http://localhost:3000/analytics/overview"
+```
+3. Listagem de Enriquecimentos:
+```
+curl -H "Authorization: Bearer driva_test_key_abc123xyz789" \
+"http://localhost:3000/analytics/enrichments?limit=5"
+```
+
 ## Estrutura do Repositório
 Para detalhes específicos de cada componente, consulte os arquivos README internos:
 - /api: API em Go (Gin), middlewares e endpoints de analytics.
