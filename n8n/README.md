@@ -76,19 +76,6 @@ Se já houver dados antigos em SQLite e você mudou para Postgres, faça `docker
 (Invoke-WebRequest -Uri "http://localhost:3000/analytics/overview" -Headers @{Authorization="Bearer driva_test_key_abc123xyz789"}).Content
 ```
 
-## Observabilidade e boas práticas nos workflows
-
-- Implementar logging (nodes de Set/Function que gravam contagem/erros em uma tabela `dw_pipeline_state`).
-- Retry em 429 (HTTP Request): backoff exponencial, 5 tentativas é um bom ponto inicial.
-- Usar Execuções chamáveis (Execute Workflow) para manter ingestão e processamento modulares.
-
-## Estrutura e decisões técnicas (resumo)
-
-- DB Type: `postgresdb` (persistência de workflows/executions no Postgres).
-- Paginação da API: loop via code node (`this.helpers.httpRequest`) com tratamento de 429.
-- Bronze→Gold: Code node com regras de tradução e cálculos (duracao, tempo_por_contato, flags).
-- Orquestrador: agendador 5 minutos → chama ingestão → quando concluído chama processamento.
-
 ## Arquivos nesta pasta
 
 - `01-ingestao-api-bronze.json` — workflow de ingestão (importar primeiro)
