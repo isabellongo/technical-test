@@ -87,6 +87,8 @@ Este projeto não apenas cumpre os requisitos, mas aplica boas práticas de enge
 - **Versionamento e Testes:** Uso de Git para versionamento e testes realizados para cada etapa do projeto antes da integração final (detalhados nos sub-readmes).
 
 ## Como Executar
+Mais detalhes sobre os pré-requisitos individuais e os testes para verificação de cada etapa estão disponíveis nos README.md dentro das pastas /db, /api, /frontend, /n8n.
+
 **Pré-requisitos:** 
 - Docker & Docker Compose (v2+).
 - Arquivo .env na raiz (conforme exemplo abaixo).
