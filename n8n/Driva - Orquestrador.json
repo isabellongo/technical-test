@@ -1,0 +1,145 @@
+{
+  "name": "Driva - Orquestrador",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "ed6b8940-ef66-44f2-bc1e-c2f88b9508c4",
+      "name": "A cada 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "sgxDZXMVHUyE0RzG",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/sgxDZXMVHUyE0RzG",
+          "cachedResultName": "Driva - Ingestão API → Bronze"
+        },
+        "options": {}
+      },
+      "id": "e0e23a8b-56fc-4d1e-ba0b-ddfe99649e22",
+      "name": "Executar Ingestão",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jEwYifYLpw6L0XYX",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jEwYifYLpw6L0XYX",
+          "cachedResultName": "Driva - Processamento Bronze → Gold"
+        },
+        "options": {}
+      },
+      "id": "f1313506-9f63-46f3-9dc6-ee8aead03666",
+      "name": "Executar Processamento",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c1a36a3d-0fd3-4820-a0a5-3418c0345675",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        112
+      ],
+      "id": "d288fbc3-664c-4204-a3ff-6cc6919755e2",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "A cada 5 min": {
+      "main": [
+        [
+          {
+            "node": "Executar Ingestão",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Executar Ingestão": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Executar Processamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1b568197-3c04-471d-b6d1-0ffb3fe7ddce",
+  "meta": {
+    "instanceId": "1502a92b0c41af627998a13e74662ddaa10743bcfe52fb324af4057ca13e2f31"
+  },
+  "id": "2Hm87XsFKn6are6f",
+  "tags": []
+}

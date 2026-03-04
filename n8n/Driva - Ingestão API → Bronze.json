@@ -17,20 +17,20 @@
         },
         "options": {}
       },
-      "id": "aa4ea4be-4055-47eb-8683-72e3cf906751",
+      "id": "066b3dd3-85b1-46a9-b60e-3c0b996eaa00",
       "name": "Fetch API Bronze",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        -1472,
-        144
+        -864,
+        192
       ],
       "retryOnFail": true,
       "maxTries": 5,
       "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "tMVNqGfiPFza2pVU",
+          "id": "46iHEPzKRExaNWVY",
           "name": "Header Auth account"
         }
       }
@@ -162,19 +162,19 @@
         },
         "options": {}
       },
-      "id": "37fafbf6-9c65-44d4-b075-6960db20bce4",
+      "id": "5c75e764-a995-4541-82ce-68816e732b26",
       "name": "Postgres Upsert",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.4,
       "position": [
-        -1008,
-        144
+        -400,
+        192
       ],
       "executeOnce": false,
       "retryOnFail": false,
       "credentials": {
         "postgres": {
-          "id": "nrmv9McZIxEOOgTh",
+          "id": "Bd1VuIevWfwlKnJF",
           "name": "Postgres account"
         }
       }
@@ -203,25 +203,14 @@
         },
         "options": {}
       },
-      "id": "b83ba46f-bcbd-415f-b5ab-3d12bcf51325",
+      "id": "321da8f3-7a48-4135-9851-49dfadaddba4",
       "name": "Has More?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -608,
-        144
+        0,
+        192
       ]
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -1872,
-        144
-      ],
-      "id": "0625a281-edbb-4d90-aff8-741d42b8e3ba",
-      "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
@@ -232,23 +221,23 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        -1216,
-        144
+        -608,
+        192
       ],
-      "id": "7f5b2cbb-2453-4889-b13a-08c9dd7f38c6",
+      "id": "21eb61bf-169c-4306-ae7a-afca9ba87bba",
       "name": "Split Out"
     },
     {
       "parameters": {
         "unit": "seconds"
       },
-      "id": "579b7aa9-d3ce-4a2f-8836-abbcef8a5806",
+      "id": "e0f12bee-2c36-4e80-ace3-696c7de04b0c",
       "name": "WAIT",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1,
       "position": [
-        -784,
-        144
+        -176,
+        192
       ],
       "webhookId": "ff6c1ec1-ee7c-40fc-aa2c-3dff9f8ab760",
       "executeOnce": true
@@ -276,10 +265,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1680,
-        144
+        -1072,
+        192
       ],
-      "id": "59c5c335-3aa6-4f98-a1b7-3eae6ee7b4d6",
+      "id": "e9bdabaf-9aaa-4eb2-ae8a-09f7ca2159a1",
       "name": "Set Variables"
     },
     {
@@ -295,14 +284,50 @@
         },
         "options": {}
       },
-      "id": "1685cbfe-e026-4182-86bb-7a3c10812004",
+      "id": "19fea0b5-2042-4690-959b-fba4a97e47c0",
       "name": "Next Page",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.2,
       "position": [
-        -608,
-        -48
+        0,
+        0
       ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11be81d7-ee55-408e-ab9b-2a9e42ad1908",
+              "name": "success",
+              "value": "true",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        224
+      ],
+      "id": "73957525-3f47-40be-aff7-a6399ff4f433",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1264,
+        192
+      ],
+      "id": "3a7248f0-372f-438d-9da4-8871e1646061",
+      "name": "When Executed by Another Workflow"
     }
   ],
   "pinData": {},
@@ -337,14 +362,10 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "When clicking ‘Execute workflow’": {
-      "main": [
+        ],
         [
           {
-            "node": "Set Variables",
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
@@ -394,6 +415,17 @@
           }
         ]
       ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -402,11 +434,11 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "dddf4725-bf59-476a-a954-12e1c7f603da",
+  "versionId": "d3238480-13a6-4550-a505-0b50b49ec82b",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "d429e8b74241705b41001b80e5e0069daefc162bb237a5b55404df77386fd7aa"
+    "instanceId": "1502a92b0c41af627998a13e74662ddaa10743bcfe52fb324af4057ca13e2f31"
   },
-  "id": "FDER6qLLeSmXNg5X",
+  "id": "sgxDZXMVHUyE0RzG",
   "tags": []
 }
