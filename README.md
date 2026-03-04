@@ -113,7 +113,7 @@ docker-compose up -d
 - Frontend (Docker): http://localhost:5173
 - API (Go): http://localhost:3000
 - n8n: http://localhost:5678
-- Postgres: localhost:5432
+- Postgres: http://localhost:5432
 
 ## Estrutura do Repositório
 Para detalhes específicos de cada componente, consulte os arquivos README internos:
