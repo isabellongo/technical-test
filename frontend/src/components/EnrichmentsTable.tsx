@@ -35,42 +35,43 @@ export default function EnrichmentsTable() {
   const totalPages = Math.max(1, Math.ceil(total / limit))
 
   return (
-    <div style={{ border: '1px solid #eee', padding: 12, borderRadius: 8 }}>
-      <h3>Enriquecimentos</h3>
+    <div className="table-card">
       {loading ? (
         <div>Carregando...</div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: 'left', padding: 6 }}>ID</th>
-              <th style={{ textAlign: 'left', padding: 6 }}>Workspace</th>
-              <th style={{ textAlign: 'left', padding: 6 }}>Contatos</th>
-              <th style={{ textAlign: 'left', padding: 6 }}>Status</th>
-              <th style={{ textAlign: 'left', padding: 6 }}>Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((r) => (
-              <tr key={r.id_enriquecimento}>
-                <td style={{ padding: 6, borderTop: '1px solid #f0f0f0' }}>{r.id_enriquecimento.slice(0, 8)}</td>
-                <td style={{ padding: 6, borderTop: '1px solid #f0f0f0' }}>{r.nome_workspace}</td>
-                <td style={{ padding: 6, borderTop: '1px solid #f0f0f0' }}>{r.total_contatos}</td>
-                <td style={{ padding: 6, borderTop: '1px solid #f0f0f0' }}>{r.status_processamento}</td>
-                <td style={{ padding: 6, borderTop: '1px solid #f0f0f0' }}>{new Date(r.data_criacao).toLocaleString()}</td>
+        <div className="table-scroll">
+          <table className="enrichments-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Workspace</th>
+                <th>Contatos</th>
+                <th>Status</th>
+                <th>Data</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((r) => (
+                <tr key={r.id_enriquecimento}>
+                  <td className="mono">{r.id_enriquecimento.slice(0, 8)}</td>
+                  <td>{r.nome_workspace}</td>
+                  <td>{r.total_contatos}</td>
+                  <td>{r.status_processamento}</td>
+                  <td>{new Date(r.data_criacao).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+      <div className="table-footer">
         <div>
           Página {page} de {totalPages}
         </div>
         <div>
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ marginRight: 8 }}>Anterior</button>
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Próxima</button>
+          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="btn" style={{ marginRight: 8 }}>Anterior</button>
+          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="btn">Próxima</button>
         </div>
       </div>
     </div>

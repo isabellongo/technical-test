@@ -12,7 +12,8 @@ COPY . .
 # Build-time variables for Vite
 ARG VITE_API_URL
 ARG VITE_API_KEY
-RUN echo "VITE_API_URL=${VITE_API_URL:-http://api:3000}" > .env
+# For robust deployment with nginx proxy, default VITE_API_URL to '/api'
+RUN echo "VITE_API_URL=${VITE_API_URL:-/api}" > .env
 RUN echo "VITE_API_KEY=${VITE_API_KEY:-driva_test_key_abc123xyz789}" >> .env
 
 RUN npm run build

@@ -16,28 +16,28 @@ function App() {
   const totalPorCategoria = overview.total_por_categoria ?? {}
 
   return (
-    <div style={{ maxWidth: 1100, margin: '24px auto', padding: 12 }}>
-      <h1>Driva - Dashboard</h1>
+    <div className="app-root">
+      <h1 className="app-title">Driva - Dashboard</h1>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+      <div className="kpi-row">
         <KPICard title="Total" value={total} subtitle="Enriquecimentos" />
         <KPICard title="Sucesso" value={`${success} (${percent.toFixed(1)}%)`} subtitle="Total com sucesso" />
         <KPICard title="Tempo médio (min)" value={tempoMedio.toFixed(1)} subtitle="dur. proc." />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: 12, marginBottom: 16 }}>
-        <div>
-          <h3>Distribuição por categoria</h3>
+      <div className="dashboard-grid">
+        <div className="chart-col">
+          <h3 className="section-title">Distribuição por categoria</h3>
           <EnrichmentsChart data={totalPorCategoria} />
         </div>
 
-        <div>
-          <h3>Últimos enriquecimentos</h3>
+        <div className="table-col">
+          <h3 className="section-title">Últimos enriquecimentos</h3>
           <EnrichmentsTable />
         </div>
       </div>
 
-      {loading && <div>Carregando dados...</div>}
+      {loading && <div className="loading">Carregando dados...</div>}
     </div>
   )
 }

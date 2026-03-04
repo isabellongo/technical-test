@@ -110,8 +110,6 @@ CREATE INDEX IF NOT EXISTS idx_gold_categoria ON dw_gold_enrichments(categoria_t
 -- AMBIENTE DE TESTE: MVP usa full refresh (busca todas as páginas). Esta tabela
 -- permite evoluir para watermark (ex: última página/updated_at processada).
 --
--- DECISÃO: Manter desde o início para mostrar pensamento em evolução; o workflow
--- de ingestão pode (opcionalmente) registrar última execução aqui.
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS dw_pipeline_state (
     id                  SERIAL PRIMARY KEY,
