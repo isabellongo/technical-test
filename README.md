@@ -1,8 +1,8 @@
-# 🚀 Driva Data Pipeline & Analytics Challenge
+# Driva Data Pipeline & Analytics Challenge
 
 Este repositório contém a solução completa para o desafio técnico da **Driva**. A aplicação consiste em um ecossistema conteinerizado que realiza a ingestão, processamento e visualização de dados de enriquecimento B2B, seguindo a arquitetura de **Medallion Data Warehouse (Bronze & Gold)**.
 
-## 🏗️ Arquitetura do Sistema
+## Arquitetura do Sistema
 
 A solução foi desenhada para ser resiliente e escalável, utilizando o **n8n** como orquestrador de ETL, **Go** para a camada de serviços e **React** para a interface de monitoramento.
 
