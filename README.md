@@ -67,6 +67,10 @@ H -->|Sim| I[Melhorias opcionais]
 ```
 ## Decisões de Engenharia e Boas Práticas
 
+### Performance e Experiência do Desenvolvedor (DX)
+* **Indexação Estratégica:** O banco de dados foi projetado com índices nas colunas de busca frequente (`id_workspace`, `status_processamento`, `data_atualizacao_dw`) na camada Gold, garantindo que o Dashboard escale mesmo com milhões de registros.
+* **Determinismo de Testes:** O script `init.sql` foi construído para ser idempotente e inclui um seed determinístico, permitindo que qualquer desenvolvedor suba o ambiente e visualize os mesmos indicadores imediatamente.
+
 ### Confiabilidade de Dados (Idempotência e Medallion)
 * **Cláusula UPSERT:** A lógica de ON CONFLICT nas camadas Bronze e Gold garante que o pipeline seja idempotente. Se o job falhar ou rodar em duplicidade, o banco apenas atualiza o estado atual em vez de gerar registros duplicados.
 * **Arquitetura Medallion:** A camada Bronze captura o dado bruto (Raw) de forma fiel. Isso permite que novas regras de negócio na Gold sejam aplicadas retroativamente sem a necessidade de re-onerar a API fonte.
@@ -145,11 +149,26 @@ Um vídeo explicando a arquitetura, o funcionamento do pipeline e a visualizaç�
 👉 [LINK_PARA_O_VIDEO_AQUI]
 
 ## Melhorias e Expansões Futuras
-- **Watermark para Ingestão Incremental:** Atualmente, o pipeline processa o dataset completo para garantir a integridade. Uma melhoria crítica (já com 50% da infraestrutura pronta no banco) é a implementação de Watermark. Isso permitirá que o n8n consulte apenas registros criados ou alterados desde a última execução bem-sucedida.
-- **Observabilidade e Logs:**
-	- Health Checks Dinâmicos: Implementação de um endpoint /health na API Go que verifica a conectividade ativa com o Postgres.
-	- Monitoramento de Workflows: Integração do n8n com ferramentas de log externas para alertar caso o workflow falhe consecutivamente.
-- **Qualidade de Dados:**
-	- Camada de Validação: Adição de testes de integridade entre a Bronze e a Gold (ex: garantir que total_contacts nunca seja negativo) antes da transformação final.
+### Observabilidade e Saúde do Sistema
+* **Métricas com Prometheus/Grafana:** Implementação de um exportador de métricas na API Go para monitorar latência de endpoints e taxa de erro 429 da fonte.
+* **Logs Estruturados:** Substituição dos logs padrão por logs em JSON (ex: Zap ou Logrus) para facilitar a agregação em ferramentas como ELK Stack ou Datadog.
+
+### Qualidade e Contratos
+* **Testes Automatizados:** Implementação de testes de integração para as transformações Bronze→Gold e testes de componentes no Frontend utilizando React Testing Library.
+* **Documentação de API:** Integração com Swagger/OpenAPI para gerar documentação interativa dos endpoints de Analytics.
+
+### Frontend Pro
+* **Tratamento de Erros na UI:** Adição de estados de "Loading" e "Toast Notifications" para informar o usuário caso a API fonte esteja em Rate Limit ou fora do ar.
+* **Storybook:** Documentação visual dos componentes de KPI e Gráficos para garantir consistência visual.
+
+### Watermark para Ingestão Incremental
+Atualmente, o pipeline processa o dataset completo para garantir a integridade. Uma melhoria crítica (já com 50% da infraestrutura pronta no banco) é a implementação de Watermark. Isso permitirá que o n8n consulte apenas registros criados ou alterados desde a última execução bem-sucedida.
+
+### Observabilidade e Logs
+* Health Checks Dinâmicos: Implementação de um endpoint /health na API Go que verifica a conectividade ativa com o Postgres.
+* Monitoramento de Workflows: Integração do n8n com ferramentas de log externas para alertar caso o workflow falhe consecutivamente.
+
+###	Qualidade de Dados
+* Camada de Validação: Adição de testes de integridade entre a Bronze e a Gold (ex: garantir que total_contacts nunca seja negativo) antes da transformação final.
 
 *Desenvolvido por Isabel Cristina Kavalco Longo como parte do desafio técnico para o time de Tech da Driva.*
