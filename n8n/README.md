@@ -34,7 +34,10 @@ Se já houver dados antigos em SQLite e você mudou para Postgres, faça `docker
    - Password: `POSTGRES_PASSWORD`
    - Port: `5432`
 3. Nome recomendado: `Postgres Driva`
+## Criar credencial Header no n8n
 
+1. Settings → Credentials → Add Credential → Header
+   - Value: `Bearer driva_test_key_abc123xyz789`
 ## Importar workflows
 
 1. Menu (três pontinhos) → Import from File
