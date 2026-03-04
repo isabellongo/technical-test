@@ -68,10 +68,10 @@ H -->|Sim| I[Melhorias opcionais]
 1. **Idempotência e Resiliência** (Cláusula UPSERT): A lógica de Upsert nas camadas de dados garante que não haverá duplicidade.
 2. **Separação de preocupações:** A camada **Bronze** armazena o dado bruto (Raw), para que mudanças nas regras de negócio entre Bronze -> Gold não precisem buscar todos os dados na API novamente.
 3. **Estratégia de Paginação e Gestão de Memória:** Para garantir que o projeto funcione com qualquer quantidade de entradas, foram aplicadas as seguintes soluções: 
-- Prevenção de Buffer Overflow: Em vez de tentar carregar todos os dados em memória para uma única inserção, o pipeline processa "página por página". Isso mantém o consumo de RAM do container n8n constante e baixo, independente do tamanho do dataset.
-- Iteração Sequencial vs. Rate Limit: A escolha pela paginação sequencial (em vez de disparos paralelos) foi uma decisão deliberada para respeitar o Rate Limiting da API e garantir que a ordem dos logs de ingestão (dw_ingested_at) seja consistente.
+	- Prevenção de Buffer Overflow: Em vez de tentar carregar todos os dados em memória para uma única inserção, o pipeline processa "página por página". Isso mantém o consumo de RAM do container n8n constante e baixo, independente do tamanho do dataset.
+	- Iteração Sequencial vs. Rate Limit: A escolha pela paginação sequencial (em vez de disparos paralelos) foi uma decisão deliberada para respeitar o Rate Limiting da API e garantir que a ordem dos logs de ingestão (dw_ingested_at) seja consistente.
 4. **Estratégia de Backoff (Tratamento de 429):** A API fonte simula limites de requisição.
-- Uma lógica de **Wait/Retry** que atua como um _Exponential Backoff_ simplificado foi utilizada, evitando que o pipeline entre em um loop de erro infinito e "estresse" o servidor da API.
+	- Uma lógica de **Wait/Retry** que atua como um _Exponential Backoff_ simplificado foi utilizada, evitando que o pipeline entre em um loop de erro infinito e "estresse" o servidor da API.
   
 ## Boas práticas aplicadas:
 - **Separação Clara de Responsabilidades:** Arquitetura limpa com divisão entre lógica de domínio (internal), rotas e repositórios na API Go.
